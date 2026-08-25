@@ -79,7 +79,8 @@ const RULES = [
   { re: /wagmi stands|gm means/i, a: "wagmi" },
   { re: /seed phrase.*(words|length)|mnemonic.*(words)/i, a: "12" },
   { re: /bip-?39/i, a: "bip39" },
-  { re: /tps.*(solana)|solana.*(tps|speed)/i, a: "65000" },
+  { re: /solana.*(tps|speed)/i, a: "65000" },
+  { re: /solana.*(slot|block).*(time|interval|duration)/i, a: "400" },
   { re: /solana.*(token standard|nft standard)/i, a: "token22" },
   { re: /pump.*fun|bonding curve.*(launch|platform)/i, a: "pumpfun" },
   { re: /mint.*(means|nft)/i, a: "mint" },
@@ -178,7 +179,7 @@ const POOL = [
   { k: /terra|luna|do kwon/i, a: ["ust", "do kwon", "2022"] },
   { k: /ftx|sbf|bankman/i, a: ["sam bankman-fried", "2022"] },
   { k: /binance|cz/i, a: ["binance", "cz", "changpeng zhao"] },
-  { k: /solana/i, a: ["anatolyyakovenko", "65000", "sol", "rust"] },
+  { k: /solana/i, a: ["anatolyyakovenko", "65000", "400", "sol", "rust"] },
   { k: /lightning/i, a: ["layer2", "joseph poon"] },
   { k: /bored ape|bayc/i, a: ["10000"] },
   { k: /cryptopunk/i, a: ["10000", "larva labs"] },
@@ -293,6 +294,12 @@ function buildCandidates(q) {
 }
 
 // ---------------- protocol helpers ----------------
+// Monotonic nonce counter: server requires each nonce > last nonce for this
+// key in this room. Using Date.now() for concurrent submissions causes nonce
+// collisions (400 errors). This counter guarantees strict monotonicity.
+let _nonceSeq = Date.now();
+function nextNonce() { return String(++_nonceSeq); }
+
 function normalizeAnswer(a) {
   return a.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -302,7 +309,7 @@ function quizHash(answer, cid) {
 }
 
 async function saySigned(text, attempt = 0) {
-  const nonce = String(Date.now());
+  const nonce = nextNonce();
   const sig = signString(id.priv, `${ROOM}|${nonce}|${text}`);
   const url = `${BASE}/r/${ROOM}/say-signed/${encodeURIComponent(id.did)}/${encodeURIComponent(sig)}/${nonce}/${encodeURIComponent(text)}`;
   const res = await fetch(url, { headers: GET_HEADERS });
@@ -312,6 +319,11 @@ async function saySigned(text, attempt = 0) {
     LOG("rate limited, waiting", wait, "s");
     await new Promise(r => setTimeout(r, Number(wait) * 1000));
     return saySigned(text, attempt);
+  }
+  if (res.status === 400 && /nonce/.test(body) && attempt < 5) {
+    // nonce collision under concurrency — nextNonce() already advanced, retry
+    await new Promise(r => setTimeout(r, 50));
+    return saySigned(text, attempt + 1);
   }
   if (res.status === 500 && attempt < 10) {
     // upstream is flaky behind cloudflare — retry fast with a fresh nonce
