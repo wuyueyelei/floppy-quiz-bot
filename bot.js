@@ -382,15 +382,20 @@ function handleQuiz(text) {
 
 function handleResult(text) {
   // ■ RESULT <round> || ANSWER: <ans> || 1st z6Mk…XXXX Npt || ...
-  const m = text.match(/■ RESULT (\w+).*?ANSWER: (.*?)\s*\|\|/);
-  const am = m || text.match(/ANSWER: (.*?)\s*\|\|/) || text.match(/ANSWER: (\S+)/);
+  // The answer is everything between "ANSWER: " and the next " || " pair.
+  // Use a greedy match on the literal "ANSWER: " prefix, then stop at the
+  // double-pipe delimiter (the answer itself must not contain "||").
+  const am = text.match(/ANSWER:\s*([^|]*?)\s*(?:\|\||$)/);
   if (!am) return;
-  const answer = am[1];
-  // find the quiz question for this round from recent memory
-  if (state.lastQuiz && state.lastQuiz.round && !learned.some(l => l.q === state.lastQuiz.q)) {
-    learned.push({ round: state.lastQuiz.round, q: state.lastQuiz.q, a: answer });
+  const answer = am[1].trim();
+  const roundM = text.match(/■ RESULT\s+(\w+)/);
+  const round = roundM ? roundM[1] : (state.lastQuiz ? state.lastQuiz.round : null);
+  // associate with the question we saw for this round
+  const q = (state.lastQuiz && (!round || state.lastQuiz.round === round)) ? state.lastQuiz.q : null;
+  if (q && !learned.some(l => l.q === q)) {
+    learned.push({ round: round || "?", q, a: answer });
     fs.writeFileSync(learnedFile, JSON.stringify(learned, null, 2));
-    LOG(`learned: "${state.lastQuiz.q}" => ${answer}`);
+    LOG(`learned: "${q}" => ${answer}`);
   }
   if (text.includes(id.did.slice(0, 20)) || /z6MkvdfNUw2p/.test(text)) {
     const pm = text.match(/z6MkvdfNUw2p\S*\s*(\d+)pt/);
