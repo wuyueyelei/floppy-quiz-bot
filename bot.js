@@ -204,7 +204,30 @@ const POOL = [
   { k: /gas|fee/i, a: ["eth", "gwei"] },
   { k: /satoshi.*unit|unit.*satoshi/i, a: ["satoshi"] },
 ];
-const NUMERIC_GUESSES = ["10000", "21000000", "21", "10", "12", "4", "2009", "2008", "2022", "2021", "2016", "3", "2", "8", "5", "1 million", "1000000"];
+const NUMERIC_GUESSES = [
+  "10000", "21000000", "21", "10", "12", "4", "2009", "2008", "2022", "2021",
+  "2016", "2015", "2014", "2010", "2013", "3", "2", "8", "5", "7", "6", "1",
+  "1 million", "1000000", "69000", "65000", "69000000", "850000", "210000",
+  "32", "64", "256", "128", "21 million", "0", "100", "1000",
+];
+
+// Firehose: the ~35 most common correct answers across all crypto trivia.
+// When we have no primary match, dump these to fill remaining candidate slots.
+const FIREHOSE = [
+  "satoshinakamoto", "vitalikbuterin", "hal finney", "adam back", "gavin wood",
+  "charles hoskinson", "anatoly yakovenko", "brian armstrong", "changpeng zhao",
+  "sam bankman-fried", "do kwon", "nick szabo", "wei dai", "laszlo hanyecz",
+  "ross ulbricht", "dread pirate roberts", "hayden adams", "larva labs",
+  "joseph poon", "zooko wilcox", "kevin mccoy", "justin sun", "su zhu",
+  "alex mashinsky", "mark karpeles",
+  "ethereum", "bitcoin", "solana", "binance", "tether", "ust", "usdc",
+  "monero", "chainlink", "metamask", "ledger", "opensea", "uniswap",
+  "pumpfun", "ordinals", "quantum", "cryptopunks", "shiba inu",
+  "erc721", "erc20", "eip1559", "bip39", "token22", "proofofstake",
+  "proofofwork", "layer2", "zkrollup", "decentralizedfinance",
+  "decentralizedautonomousorganization", "nonfungibletoken", "web3",
+  "satoshi", "gwei", "wbtc", "aave", "curve", "wbtc",
+];
 
 const ONES = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
 const TENS = { 2: "twenty", 3: "thirty", 4: "forty", 5: "fifty", 6: "sixty", 7: "seventy", 8: "eighty", 9: "ninety" };
@@ -228,7 +251,7 @@ function wordsToNumber(w) {
   return null;
 }
 
-const MAX_CANDIDATES = 6;
+const MAX_CANDIDATES = 15;
 
 function buildCandidates(q) {
   const out = [];
@@ -247,8 +270,8 @@ function buildCandidates(q) {
   for (const e of POOL) if (e.k.test(q)) e.a.forEach(push);
   // number-ish questions get generic numeric guesses as last resort
   if (/how (many|much)|what year|when|how old/i.test(q)) NUMERIC_GUESSES.forEach(push);
-  // universal floor: never skip a round entirely
-  if (!out.length) ["satoshinakamoto", "adam back", "vitalikbuterin", "10000", "2022", "erc721"].forEach(push);
+  // fill remaining slots with firehose high-probability answers
+  if (out.length < MAX_CANDIDATES) FIREHOSE.forEach(push);
   return out.slice(0, MAX_CANDIDATES);
 }
 
