@@ -211,22 +211,39 @@ const NUMERIC_GUESSES = [
   "32", "64", "256", "128", "21 million", "0", "100", "1000",
 ];
 
-// Firehose: the ~35 most common correct answers across all crypto trivia.
-// When we have no primary match, dump these to fill remaining candidate slots.
+// Firehose: ~80 most common correct answers across all crypto trivia.
+// Fills remaining candidate slots when RULES/learned/POOL miss.
 const FIREHOSE = [
+  // --- people (founders, hackers, notable figures) ---
   "satoshinakamoto", "vitalikbuterin", "hal finney", "adam back", "gavin wood",
   "charles hoskinson", "anatoly yakovenko", "brian armstrong", "changpeng zhao",
   "sam bankman-fried", "do kwon", "nick szabo", "wei dai", "laszlo hanyecz",
   "ross ulbricht", "dread pirate roberts", "hayden adams", "larva labs",
   "joseph poon", "zooko wilcox", "kevin mccoy", "justin sun", "su zhu",
-  "alex mashinsky", "mark karpeles",
+  "alex mashinsky", "mark karpeles", "craig wright", "jihan wu", "roger ver",
+  "michael saylor", "jack dorsey", "tim draper", "elizabeth stark",
+  // --- chains & projects ---
   "ethereum", "bitcoin", "solana", "binance", "tether", "ust", "usdc",
   "monero", "chainlink", "metamask", "ledger", "opensea", "uniswap",
   "pumpfun", "ordinals", "quantum", "cryptopunks", "shiba inu",
-  "erc721", "erc20", "eip1559", "bip39", "token22", "proofofstake",
-  "proofofwork", "layer2", "zkrollup", "decentralizedfinance",
-  "decentralizedautonomousorganization", "nonfungibletoken", "web3",
-  "satoshi", "gwei", "wbtc", "aave", "curve", "wbtc",
+  "cardano", "polkadot", "avalanche", "polygon", "arbitrum", "optimism",
+  "aptos", "sui", "ripple", "stellar", "algorand", "tezos", "near",
+  "filecoin", "the graph", "sushi", "compound", "maker", "dai",
+  "bitcoin cash", "litecoin", "dogecoin", "ethereum classic",
+  // --- standards & concepts ---
+  "erc721", "erc20", "erc1155", "eip1559", "eip2981", "bip39", "bip32",
+  "token22", "proofofstake", "proofofwork", "layer2", "zkrollup",
+  "decentralizedfinance", "decentralizedautonomousorganization",
+  "nonfungibletoken", "web3", "defi", "nft", "dao", "ico",
+  "liquid staking", "yield farming", "impermanent loss", "flash loan",
+  "merkle tree", "nonce", "gas",
+  // --- units & tokens ---
+  "satoshi", "gwei", "wei", "wbtc", "aave", "curve", "eth", "btc",
+  "sol", "dot", "ada", "xrp", "bnb",
+  // --- dates & numbers (high frequency in trivia) ---
+  "2008", "2009", "2010", "2014", "2015", "2016", "2021", "2022",
+  "10000", "21000000", "21", "10", "12", "4", "32", "64", "256",
+  "69000000", "850000", "65000", "69000", "1 million",
 ];
 
 const ONES = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
@@ -251,7 +268,7 @@ function wordsToNumber(w) {
   return null;
 }
 
-const MAX_CANDIDATES = 15;
+const MAX_CANDIDATES = 30;
 
 function buildCandidates(q) {
   const out = [];
