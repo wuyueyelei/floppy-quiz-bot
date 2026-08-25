@@ -1,0 +1,10 @@
+# secrets & runtime state — never commit
+identity.json
+*.pem
+bot_state.json
+learned.json
+bot.log
+unknown_questions.log
+history_dump.txt
+contribution-proof.json
+.DS_Store
