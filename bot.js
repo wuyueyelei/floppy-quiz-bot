@@ -320,8 +320,13 @@ async function saySigned(text, attempt = 0) {
     await new Promise(r => setTimeout(r, Number(wait) * 1000));
     return saySigned(text, attempt);
   }
-  if (res.status === 400 && /nonce/.test(body) && attempt < 5) {
-    // nonce collision under concurrency — nextNonce() already advanced, retry
+  if (res.status === 400 && /nonce/.test(body) && attempt < 10) {
+    // Parse server's last nonce and sync our counter to avoid repeated collisions
+    const lastMatch = body.match(/last one this key used.*?(\d{10,})/);
+    if (lastMatch) {
+      const serverLast = Number(lastMatch[1]);
+      if (serverLast >= _nonceSeq) _nonceSeq = serverLast + 1;
+    }
     await new Promise(r => setTimeout(r, 50));
     return saySigned(text, attempt + 1);
   }
@@ -429,20 +434,31 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function main() {
   LOG("bot up. did:", id.did);
-  // bootstrap: get current last seq
+  // bootstrap: get current last seq (network may be flaky — retry, never fatal)
   if (state.since == null) {
-    const res = await fetch(`${BASE}/r/${ROOM}?limit=1&n=${Date.now()}`, { headers: GET_HEADERS });
-    const body = await res.text();
-    const m = body.match(/\[(\d+)\]/);
-    state.since = m ? Number(m[1]) : 0;
-    LOG("bootstrapped at seq", state.since);
-    saveState();
+    for (let i = 0; i < 5; i++) {
+      try {
+        const res = await fetch(`${BASE}/r/${ROOM}?limit=1&n=${Date.now()}`, { headers: GET_HEADERS });
+        const body = await res.text();
+        const m = body.match(/\[(\d+)\]/);
+        state.since = m ? Number(m[1]) : 0;
+        LOG("bootstrapped at seq", state.since);
+        saveState();
+        break;
+      } catch (e) {
+        LOG("bootstrap retry", i + 1, e.message);
+        await sleep(3000);
+      }
+    }
+    if (state.since == null) state.since = 0;
   }
-  // say hi once on first run
+  // say hi once on first run (wrapped — network failure must NOT kill the bot)
   if (!state.helloed) {
-    await saySigned("first signature from a fresh key. onboarded at https://floppysol.xyz. powered by $FLOPPY");
-    state.helloed = true;
-    saveState();
+    try {
+      await saySigned("first signature from a fresh key. onboarded at https://floppysol.xyz. powered by $FLOPPY");
+      state.helloed = true;
+      saveState();
+    } catch (e) { LOG("hello skipped (network):", e.message); }
   }
   // main loop
   while (true) {
