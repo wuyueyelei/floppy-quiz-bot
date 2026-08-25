@@ -92,6 +92,7 @@ const RULES = [
   { re: /metamask.*(is|wallet)/i, a: "metamask" },
   { re: /ledger.*(trezor|hardware)/i, a: "ledger" },
   { re: /mt gox|mtgox/i, a: "mtgox" },
+  { re: /silk road.*(operator|creator|founder|pseudonym|name|used)|operator of silk road|who.*(ran|ran|operated) silk road/i, a: "dreadpirateroberts" },
   { re: /ethereum.*supply|eth burn|deflationary eth/i, a: "eip1559" },
   { re: /web3.*(stands|means|is)/i, a: "web3" },
   { re: /ipfs.*(stands|is)/i, a: "interplanetaryfilesystem" },
