@@ -284,14 +284,22 @@ async function saySigned(text, attempt = 0) {
 
 // ---------------- message handling ----------------
 async function submitCandidates(cid, candidates) {
-  for (let i = 0; i < candidates.length; i++) {
-    const a = quizHash(candidates[i], cid);
+  // Batch mode: fire all candidates concurrently — no stagger delay.
+  // Wrong answers carry zero penalty; the first CORRECT hash wins the round.
+  // Parallel submission maximizes the speed window for our best guess.
+  const tasks = candidates.map((ans, i) => {
+    const a = quizHash(ans, cid);
     const tag = crypto.randomBytes(4).toString("hex");
     const msg = `f1 ch.answer ${tag} - cid=${cid} a=${a}`;
-    const ok = await saySigned(msg);
-    LOG(`answer[${i + 1}/${candidates.length}] "${candidates[i]}" -> ${ok ? "sent" : "FAILED"}`);
-    if (i < candidates.length - 1) await sleep(2000);
-  }
+    return saySigned(msg).then(ok => {
+      LOG(`answer[${i + 1}/${candidates.length}] "${ans}" -> ${ok ? "sent" : "FAILED"}`);
+      return ok;
+    }).catch(e => {
+      LOG(`answer[${i + 1}] error: ${e.message}`);
+      return false;
+    });
+  });
+  await Promise.allSettled(tasks);
 }
 
 function handleQuiz(text) {
