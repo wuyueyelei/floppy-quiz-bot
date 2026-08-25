@@ -92,11 +92,51 @@ const RULES = [
   { re: /metamask.*(is|wallet)/i, a: "metamask" },
   { re: /ledger.*(trezor|hardware)/i, a: "ledger" },
   { re: /mt gox|mtgox/i, a: "mtgox" },
-  { re: /silk road.*(operator|creator|founder|pseudonym|name|used)|operator of silk road|who.*(ran|ran|operated) silk road/i, a: "dreadpirateroberts" },
+  { re: /silk road.*(operator|creator|founder|pseudonym|name|used)|operator of silk road|who.*(ran|ran|operated) silk road/i, a: "dread pirate roberts" },
   { re: /ethereum.*supply|eth burn|deflationary eth/i, a: "eip1559" },
   { re: /web3.*(stands|means|is)/i, a: "web3" },
   { re: /ipfs.*(stands|is)/i, a: "interplanetaryfilesystem" },
   { re: /nft.*(royalt|standard.* royalties)/i, a: "eip2981" },
+  // ---- 补充：人物与事件 ----
+  { re: /first.*bitcoin.*transaction|received.*first.*btc|first btc.*recipient/i, a: "hal finney" },
+  { re: /running bitcoin/i, a: "hal finney" },
+  { re: /bit gold|pre-bitcoin.*(idea|proposal)/i, a: "nick szabo" },
+  { re: /hashcash|proof of work.*(invented|originated|before)/i, a: "adam back" },
+  { re: /b-?money/i, a: "wei dai" },
+  { re: /pizza.*(guy|man|buy|bought)|laszlo|10,?000.*pizza/i, a: "laszlo hanecz" },
+  { re: /ftx.*(founder|ceo|collapse)|sam bankman|sbf/i, a: "sam bankman-fried" },
+  { re: /alameda.*(research|founder)/i, a: "caroline ellison" },
+  { re: /coinbase.*(founder|ceo|created)/i, a: "brian armstrong" },
+  { re: /bitfinex.*(hack|stolen)/i, a: "bitfinex" },
+  { re: /ronin.*(bridge|hack)/i, a: "ronin bridge" },
+  { re: /poly network.*(hack|exploit)/i, a: "poly network" },
+  { re: /dao hack.*(year|when|much)|the dao.*(hack|attack)/i, a: "2016" },
+  { re: /crypto.*(winter).*(year|when)/i, a: "2022" },
+  { re: /el salvador|first country.*(bitcoin|legal tender)/i, a: "el salvador" },
+  { re: /three arrows|3ac.*(founder)/i, a: "su zhu" },
+  { re: /celsius.*(collapse|ceo)/i, a: "alex mashinsky" },
+  { re: /do kwon|terraform labs/i, a: "do kwon" },
+  { re: /justin sun|tron.*(founder)/i, a: "justin sun" },
+  { re: /cryptopunks.*(creator|made|who)/i, a: "larva labs" },
+  { re: /first nft/i, a: "quantum" },
+  { re: /kevin mccoy/i, a: "quantum" },
+  // ---- 补充：日期与数字 ----
+  { re: /whitepaper.*(date|published|released)|bitcoin whitepaper.*(date|when)/i, a: "october 31 2008" },
+  { re: /genesis block.*(date|when|mined)/i, a: "january 3 2009" },
+  { re: /ethereum.*(launch|mainnet|went live).*(date|year|when)/i, a: "july 30 2015" },
+  { re: /pizza day|bitcoin pizza.*(date|day|year)/i, a: "may 22 2010" },
+  { re: /bitcoin.*all.?time high|btc ath|ath.*bitcoin/i, a: "69000" },
+  { re: /satoshi.*(btc|hold|own|mined)/i, a: "1 million" },
+  { re: /satoshi.*whitepaper.*(title|called|named)/i, a: "bitcoin a peer-to-peer electronic cash system" },
+  { re: /first.*bitcoin exchange/i, a: "bitcoinmarket.com" },
+  { re: /smallest.*unit.*eth|wei.*(named|who)/i, a: "wei dai" },
+  { re: /bip stands|bip.*(stands for)/i, a: "bitcoin improvement proposal" },
+  { re: /lightning.*(paper|author|proposed)/i, a: "joseph poon" },
+  { re: /blockstream|sidechain.*(company|invented)/i, a: "blockstream" },
+  { re: /chainlink.*(is|oracle)/i, a: "chainlink" },
+  { re: /monero|privacy coin.*(most|popular)/i, a: "monero" },
+  { re: /zcash.*(founder|creator)/i, a: "zooko wilcox" },
+  { re: /ens.*(stands|domain)/i, a: "ethereum name service" },
 ];
 
 function solve(q) {
@@ -174,8 +214,8 @@ function handleQuiz(text) {
 
 function handleResult(text) {
   // ■ RESULT <round> || ANSWER: <ans> || 1st z6Mk…XXXX Npt || ...
-  const m = text.match(/■ RESULT (\w+).*?ANSWER: (\S+).*?\|\| (1st|1st place)?\s*(\S+)?\s*(\d+)pt/);
-  const am = text.match(/ANSWER: (\S+)/);
+  const m = text.match(/■ RESULT (\w+).*?ANSWER: (.*?)\s*\|\|/);
+  const am = m || text.match(/ANSWER: (.*?)\s*\|\|/) || text.match(/ANSWER: (\S+)/);
   if (!am) return;
   const answer = am[1];
   // find the quiz question for this round from recent memory
