@@ -108,6 +108,7 @@ const RULES = [
   { re: /ftx.*(founder|ceo|collapse)|sam bankman|sbf/i, a: "sam bankman-fried" },
   { re: /alameda.*(research|founder)/i, a: "caroline ellison" },
   { re: /coinbase.*(founder|ceo|created)/i, a: "brian armstrong" },
+  { re: /coinbase.*(list|ipo|nasdaq|go public)/i, a: "2021" },
   { re: /bitfinex.*(hack|stolen)/i, a: "bitfinex" },
   { re: /ronin.*(bridge|hack)/i, a: "ronin bridge" },
   { re: /poly network.*(hack|exploit)/i, a: "poly network" },
